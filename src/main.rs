@@ -1,6 +1,21 @@
+use core::num;
 use std::io;
 use std::collections::HashSet;
 use regex::Regex;
+
+struct Matrix {
+    data: Vec<Vec<f64>>,
+    num_elements: usize, //The number of rows
+    num_coefficients: usize // The number of columns
+}
+
+impl Matrix {
+    fn new(data: Vec<Vec<f64>>, num_elements: usize, num_coefficients: usize) -> Self {
+        assert!(data.len() == num_elements && data.iter().all(|c| c.len() == num_coefficients), "The number of elements and coefficients must match the dimensions of data.");
+        Self { data, num_elements, num_coefficients }
+    }
+}
+
 
 fn main() {
     println!("Enter the chemical equation you want to balance.");
@@ -29,4 +44,8 @@ fn validate_equation(equation: &str) -> Vec<&str>{
 
 fn verify_elements_match(reactants: HashSet<&str>, products: HashSet<&str>) -> bool{
     reactants.iter().all(|element| products.contains(element))
+}
+
+fn create_matrix() {
+
 }
