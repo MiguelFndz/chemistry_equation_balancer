@@ -1,4 +1,5 @@
 use std::io;
+use std::collections::HashSet;
 
 fn main() {
     println!("Enter the chemical equation you want to balance.");
@@ -15,6 +16,10 @@ fn get_equation() -> String{
 }
 
 fn validate_equation(equation: &str) -> Vec<&str>{
-    let tokens: Vec<&str> = equation.split(" ").collect();
+    let tokens: Vec<&str> = equation.split("=").collect();
     tokens
+}
+
+fn verify_elements(reactants: HashSet<&str>, products: HashSet<&str>) -> bool{
+    reactants.iter().all(|element| products.contains(element))
 }
