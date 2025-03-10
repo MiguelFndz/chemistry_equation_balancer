@@ -1,51 +1,76 @@
-use core::num;
-use std::io;
-use std::collections::HashSet;
+use std::{collections::HashSet};
 use regex::Regex;
+use std::error::Error;
 
 struct Matrix {
     data: Vec<Vec<f64>>,
-    num_elements: usize, //The number of rows
-    num_coefficients: usize // The number of columns
+    rows: usize, // Each row represents an element
+    cols: usize  // Each column represents a compound
 }
 
 impl Matrix {
-    fn new(data: Vec<Vec<f64>>, num_elements: usize, num_coefficients: usize) -> Self {
-        assert!(data.len() == num_elements && data.iter().all(|c| c.len() == num_coefficients), "The number of elements and coefficients must match the dimensions of data.");
-        Self { data, num_elements, num_coefficients }
+    fn new(data: Vec<Vec<f64>>, rows: usize, cols: usize) -> Self {
+        assert!(data.len() == rows && data.iter().all(|c| c.len() == cols), "The dimensions of the data do not match the number of rows and columns provided.");
+        Self { data, rows, cols }
     }
 }
 
-
-fn main() {
-    println!("Enter the chemical equation you want to balance.");
-    let user_equation: String = get_equation();
-    println!("{:?}", &user_equation);
-    let tokens = validate_equation(&user_equation);
-    println!("{:?}", tokens);
+// Get the function from the user and return without whitespace
+fn get_function_from_user() -> String {
+    let mut equation = String::new();
+    std::io::stdin().read_line(&mut equation).unwrap();
+    String::from(equation.trim())
 }
 
-fn get_equation() -> String{
-    let mut user_equation: String = String::new();
-    std::io::stdin().read_line(&mut user_equation).unwrap();
-    String::from(user_equation.trim())
-}
-
-fn validate_equation(equation: &str) -> Vec<&str>{
-    let tokens: Vec<&str> = equation.split("=").collect();
+// Ensures that the user equation has the same elements present on both sides of the equation, and returns a list of all unique elements if valid.
+fn verify_user_equation(equation_vec: Vec<&str>) -> Result<Vec<&str>, Box<dyn Error>> {
     let regex = Regex::new(r"[A-Za-z]+").unwrap();
-    let reactants: Vec<&str> = regex.find_iter(tokens[0]).map(|element| element.as_str()).collect();
-    let products: Vec<&str> = regex.find_iter(tokens[1]).map(|element| element.as_str()).collect();
-    println!("Here are the reacting elements: {:?}", reactants);
-    println!("Here are the product elements: {:?}", products);
-    println!("{:?}", verify_elements_match(reactants.into_iter().collect(), products.into_iter().collect()));
-    tokens
+    let reactants: HashSet<&str> = regex.find_iter(equation_vec[0]).map(|c| c.as_str()).collect();
+    let products: HashSet<&str> = regex.find_iter(equation_vec[1]).map(|c| c.as_str()).collect();
+    match reactants.iter().all(|c| products.contains(c)) {
+        true => {
+            Ok(reactants.into_iter().collect())
+        }
+        false =>{
+            Err("The elements in the reactants and products do not match".into())
+        }
+    }
 }
 
-fn verify_elements_match(reactants: HashSet<&str>, products: HashSet<&str>) -> bool{
-    reactants.iter().all(|element| products.contains(element))
+// Create matrix rows
+fn create_matrix_data(elements: Vec<&str>, reactants: Vec<&str>, products: Vec<&str>) -> Vec<Vec<f64>> {
+    let mut data: Vec<Vec<f64>> = Vec::new();
+    for element in elements {
+        let mut element_row: Vec<f64> = Vec::new();
+        println!("Processing {:?}", element);
+        for reactant in &reactants {
+            if reactant.contains(element) {
+                println!("{:?} is in {:?}", element, reactant);
+                let mut index = reactant.find(element).unwrap();
+                println!("{:?} appears at position {:?} inside {:?}", element, index, reactant);
+            }
+            else {
+                println!("{:?}, is not in {:?}", element, reactant);
+            }
+        }
+        for product in &products {
+            if product.contains(element) {
+                println!("{:?} is in {:?}", element, product);
+            }
+            else {
+                println!("{:?} is not in {:?}", element, product);
+            }
+        }
+    }
+    data
 }
-
-fn create_matrix() {
-
+fn main() {
+    println!("Please enter the chemical equation you want to balance.");
+    let equation = get_function_from_user();
+    let equation_vec: Vec<&str> = equation.split(" = ").collect();
+    let elements = verify_user_equation(equation_vec.clone()).unwrap();
+    let reactants = equation_vec[0].split(" + ").collect();
+    let products = equation_vec[1].split(" + ").collect();
+    println!("Here are your elements: {:?}", elements);
+    create_matrix_data(elements, reactants, products);
 }
