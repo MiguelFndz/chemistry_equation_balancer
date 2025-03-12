@@ -1,4 +1,4 @@
-use std::{collections::HashSet};
+use std::collections::{HashMap, HashSet};
 use regex::Regex;
 use std::error::Error;
 
@@ -37,40 +37,27 @@ fn verify_user_equation(equation_vec: Vec<&str>) -> Result<Vec<&str>, Box<dyn Er
     }
 }
 
-// Create matrix rows
-fn create_matrix_data(elements: Vec<&str>, reactants: Vec<&str>, products: Vec<&str>) -> Vec<Vec<f64>> {
-    let mut data: Vec<Vec<f64>> = Vec::new();
-    for element in elements {
-        let mut element_row: Vec<f64> = Vec::new();
-        println!("Processing {:?}", element);
-        for reactant in &reactants {
-            if reactant.contains(element) {
-                println!("{:?} is in {:?}", element, reactant);
-                let mut index = reactant.find(element).unwrap();
-                println!("{:?} appears at position {:?} inside {:?}", element, index, reactant);
-            }
-            else {
-                println!("{:?}, is not in {:?}", element, reactant);
-            }
-        }
-        for product in &products {
-            if product.contains(element) {
-                println!("{:?} is in {:?}", element, product);
-            }
-            else {
-                println!("{:?} is not in {:?}", element, product);
-            }
-        }
+fn get_element_counts(compound: &str) -> HashMap<String, i32> {
+    let mut counts = HashMap::new();
+    let regex = Regex::new(r"([A-Z][a-z])(\d*)").unwrap();
+    for cap in regex.captures_iter(compound) {
+        println!("{:?}", cap);
     }
-    data
+    counts
 }
+
 fn main() {
     println!("Please enter the chemical equation you want to balance.");
     let equation = get_function_from_user();
     let equation_vec: Vec<&str> = equation.split(" = ").collect();
     let elements = verify_user_equation(equation_vec.clone()).unwrap();
-    let reactants = equation_vec[0].split(" + ").collect();
-    let products = equation_vec[1].split(" + ").collect();
+    let reactants: Vec<&str> = equation_vec[0].split(" + ").collect();
+    let products: Vec<&str> = equation_vec[1].split(" + ").collect();
     println!("Here are your elements: {:?}", elements);
-    create_matrix_data(elements, reactants, products);
+    for reactant in reactants {
+        get_element_counts(reactant);
+    }
+    for product in products {
+        get_element_counts(product);
+    }
 }
